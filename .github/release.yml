@@ -37,10 +37,6 @@ jobs:
         grep ${{ env.VERSION }} CHANGELOG.md || { echo "Ensure that the CHANGELOG contains an entry for ${{ env.VERSION }}" ; exit 1; }
     - name: Build Python
       run: python -m build
-    - name: Test Publish to PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        password: ${{ secrets.PYPI_API_TOKEN }}
     - name: Publish to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
