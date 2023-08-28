@@ -1,0 +1,51 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version'
+        required: true
+
+jobs:
+  release-pyiamvortex-job:
+    runs-on: ubuntu-latest
+    name: Release pyiamvortex
+    env:
+      VERSION: 0.0.0
+    steps:
+    - name: Set Env
+      run: |
+        echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.9
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install wheel setuptools packaging twine build --upgrade
+        pip install -r requirements-dev.txt
+    - name: Verify Tag does not exist
+      run: |
+        ! git rev-parse ${{ env.VERSION }} || { echo "Ensure that no tag exists for ${{ env.VERSION }}" ; exit 1; }
+    - name: Verify supplied version exists in the CHANGELOG
+      run: |
+        grep ${{ env.VERSION }} CHANGELOG.md || { echo "Ensure that the CHANGELOG contains an entry for ${{ env.VERSION }}" ; exit 1; }
+    - name: Build Python
+      run: python -m build
+    - name: Test Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.PYPI_API_TOKEN }}
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.PYPI_API_TOKEN }}
+    - name: Tag version on Github
+      run: |
+        git tag ${{ env.VERSION }}
+        git push origin ${{ env.VERSION }}
