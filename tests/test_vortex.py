@@ -24,7 +24,7 @@ def test_init_with_aws_actions_map(mock_get_aws_actions_map: dict[str, list[str]
 
 def test_get_aws_services(dummy_aws_actions_map: dict[str, list[str]]):
     vortex = Vortex(dummy_aws_actions_map)
-    expected_services = ["ec2", "s3", "iam"]
+    expected_services = ["ec2", "iam", "s3"]
     assert vortex.get_aws_services() == expected_services
 
 
@@ -33,14 +33,20 @@ def test_get_aws_actions(dummy_aws_actions_map: dict[str, list[str]]):
     expected_actions = [
         "ec2:DescribeInstances",
         "ec2:RunInstances",
+        "iam:CreateUser",
         "s3:GetObject",
         "s3:PutObject",
-        "iam:CreateUser",
     ]
     assert vortex.get_aws_actions() == expected_actions
 
 
-@patch("pyiamvortex.vortex.requests.get")
+def test_get_aws_actions_filter_by_service(dummy_aws_actions_map: dict[str, list[str]]):
+    vortex = Vortex(dummy_aws_actions_map)
+    expected_actions = ["ec2:DescribeInstances", "ec2:RunInstances"]
+    assert vortex.get_aws_actions(aws_service="ec2") == expected_actions
+
+
+@patch("pyiamvortex.vortex.requests_cache.CachedSession.get")
 def test_get_aws_actions_map(mock_requests_get: str):
     mock_response = MagicMock()
     mock_requests_get.return_value = mock_response
