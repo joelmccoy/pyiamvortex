@@ -14,6 +14,8 @@ class Vortex:
         else:
             self._aws_actions_map: dict[str, list[str]] = _get_aws_actions_map()
 
+        self.all_aws_actions: list[str] = self.get_aws_actions()
+
     @property
     def aws_actions_map(self) -> dict[str, list[str]]:
         return self._aws_actions_map
@@ -24,6 +26,11 @@ class Vortex:
 
     def get_aws_actions(self, aws_service: list[str] = None) -> list[str]:
         """Returns a list of sorted AWS actions (e.g. ec2:DescribeInstances, s3:GetObject)"""
+        if aws_service and aws_service not in self._aws_actions_map.keys():
+            raise ValueError(
+                f"Invalid AWS Service: {aws_service}. Valid services are: {self.get_aws_services()}"
+            )
+
         # Only return actions specified service if provided
         if aws_service:
             return sorted(
@@ -42,6 +49,26 @@ class Vortex:
                 for action in self._aws_actions_map.get(service)
             ]
         )
+
+    def expand_aws_wildcard(self, aws_action: str) -> list[str]:
+        """Returns a list of expanded AWS actions from an aws action with a wildcard (e.g. ec2:*, ec2:Describe*)"""
+        if aws_action == "*":
+            return self.all_aws_actions
+
+        if aws_action.endswith("*"):
+            return sorted(
+                [
+                    action
+                    for action in self.all_aws_actions
+                    if action.startswith(aws_action.rstrip("*"))
+                ]
+            )
+
+        if aws_action in self.all_aws_actions:
+            return [aws_action]
+
+        # return none if no match
+        return []
 
 
 def _get_aws_actions_map() -> dict[str, list[str]]:

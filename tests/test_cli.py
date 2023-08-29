@@ -26,3 +26,13 @@ def test_get_aws_services(mock_get_aws_services):
     result_aws_actions = json.loads(result.stdout)
     assert result.exit_code == 0
     assert result_aws_actions == expected_aws_services
+
+
+@patch("pyiamvortex.vortex.Vortex.expand_aws_wildcard")
+def test_expand_aws_wildcard(mock_expand_aws_wildcard):
+    expected_expanded = ["s3:PutObject", "s3:PutObjectTagging"]
+    mock_expand_aws_wildcard.return_value = expected_expanded
+    result = runner.invoke(main, ["expand-aws-wildcard", "s3:Put*"])
+    result_aws_actions = json.loads(result.stdout)
+    assert result.exit_code == 0
+    assert result_aws_actions == expected_expanded

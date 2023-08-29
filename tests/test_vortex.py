@@ -46,6 +46,59 @@ def test_get_aws_actions_filter_by_service(dummy_aws_actions_map: dict[str, list
     assert vortex.get_aws_actions(aws_service="ec2") == expected_actions
 
 
+def test_get_aws_actions_invalid_service(dummy_aws_actions_map: dict[str, list[str]]):
+    vortex = Vortex(dummy_aws_actions_map)
+    with pytest.raises(ValueError) as e:
+        assert vortex.get_aws_actions(aws_service="ABC")
+        assert (
+            str(e.value)
+            == "Invalid AWS Service: ABC. Valid services are: ['ec2', 'iam', 's3']"
+        )
+
+
+def test_expand_aws_wildcard_wildcard():
+    aws_actions_map = {
+        "ec2": ["DescribeInstances", "DescribeVpcAttribute", "RunInstances"],
+    }
+    vortex = Vortex(aws_actions_map)
+    assert vortex.expand_aws_wildcard("*") == [
+        "ec2:DescribeInstances",
+        "ec2:DescribeVpcAttribute",
+        "ec2:RunInstances",
+    ]
+    assert vortex.expand_aws_wildcard("ec2:*") == [
+        "ec2:DescribeInstances",
+        "ec2:DescribeVpcAttribute",
+        "ec2:RunInstances",
+    ]
+    assert vortex.expand_aws_wildcard("ec2:Describe*") == [
+        "ec2:DescribeInstances",
+        "ec2:DescribeVpcAttribute",
+    ]
+    assert vortex.expand_aws_wildcard("ec2:De*") == [
+        "ec2:DescribeInstances",
+        "ec2:DescribeVpcAttribute",
+    ]
+
+
+def test_expand_aws_wildcard_exact_match():
+    aws_actions_map = {
+        "ec2": ["DescribeInstances", "DescribeVpcAttribute", "RunInstances"],
+    }
+    vortex = Vortex(aws_actions_map)
+    assert vortex.expand_aws_wildcard("ec2:DescribeInstances") == [
+        "ec2:DescribeInstances"
+    ]
+
+
+def test_expand_aws_wildcard_no_match():
+    aws_actions_map = {
+        "ec2": ["DescribeInstances", "DescribeVpcAttribute", "RunInstances"],
+    }
+    vortex = Vortex(aws_actions_map)
+    assert vortex.expand_aws_wildcard("ec2:DescribeInstancesSILLY") == []
+
+
 @patch("pyiamvortex.vortex.requests_cache.CachedSession.get")
 def test_get_aws_actions_map(mock_requests_get: str):
     mock_response = MagicMock()

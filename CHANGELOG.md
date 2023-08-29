@@ -1,6 +1,13 @@
 pyiamvortex Changelog
 ==============
 
+0.3.0
+------
+
+    Features:
+        * Added expand-aws-wildcard command (CLI and Python Library)
+        * Added check to get-aws-actions command to check if service exists
+
 0.2.0
 ------
 
