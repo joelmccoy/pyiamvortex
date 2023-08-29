@@ -19,5 +19,14 @@ def get_aws_services():
     typer.echo(json.dumps(aws_services, indent=4))
 
 
+@main.command()
+def expand_aws_wildcard(aws_wildcard: str):
+    vortex: Vortex = Vortex()
+    aws_actions_expanded: list[str] = vortex.expand_aws_wildcard(
+        aws_action=aws_wildcard
+    )
+    typer.echo(json.dumps(aws_actions_expanded, indent=4))
+
+
 if __name__ == "__main__":
     main()
