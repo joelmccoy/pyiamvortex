@@ -1,7 +1,8 @@
 """Module for Vortex class and helper functions"""
-import requests
+import requests_cache
 from requests import Response
 import json
+from datetime import timedelta
 
 
 class Vortex:
@@ -18,14 +19,29 @@ class Vortex:
         return self._aws_actions_map
 
     def get_aws_services(self) -> list[str]:
-        return list(self._aws_actions_map.keys())
+        """Returns a sorted list of aws services (e.g. ec2, s3)"""
+        return sorted(list(self._aws_actions_map.keys()))
 
-    def get_aws_actions(self) -> list[str]:
-        return [
-            f"{service}:{action}"
-            for service in self._aws_actions_map.keys()
-            for action in self._aws_actions_map.get(service)
-        ]
+    def get_aws_actions(self, aws_service: list[str] = None) -> list[str]:
+        """Returns a list of sorted AWS actions (e.g. ec2:DescribeInstances, s3:GetObject)"""
+        # Only return actions specified service if provided
+        if aws_service:
+            return sorted(
+                [
+                    f"{service}:{action}"
+                    for service in self._aws_actions_map.keys()
+                    if service == aws_service
+                    for action in self._aws_actions_map.get(service)
+                ]
+            )
+        # Return all actions otherwise
+        return sorted(
+            [
+                f"{service}:{action}"
+                for service in self._aws_actions_map.keys()
+                for action in self._aws_actions_map.get(service)
+            ]
+        )
 
 
 def _get_aws_actions_map() -> dict[str, list[str]]:
@@ -33,7 +49,12 @@ def _get_aws_actions_map() -> dict[str, list[str]]:
     Grabs javascript data from AWS Policy Generator and parses
     Returns a dictionary that maps AWS service name to its list of actions.
     """
-    response: Response = requests.get(
+    # cache the reponse for policygen data
+    session = requests_cache.CachedSession(
+        "policygen_cache", use_cache_dir=True, expire_after=timedelta(days=1)
+    )
+
+    response: Response = session.get(
         "https://awspolicygen.s3.amazonaws.com/js/policies.js"
     )
 
