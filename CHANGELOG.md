@@ -1,6 +1,12 @@
 pyiamvortex Changelog
 ==============
 
+0.3.1
+------
+
+    General:
+        * Updated pywheel information to reference new github user/repo
+
 0.3.0
 ------
 
