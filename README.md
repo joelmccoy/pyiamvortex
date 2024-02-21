@@ -54,7 +54,7 @@ pyiamvortex expand-aws-wildcard 'sts:AssumeRole*' # expands the wildcard to all 
 ### Python Library
 
 ```python
-from pyiamvortex import Vortex
+from pyiamvortex.vortex import Vortex
 
 vortex = Vortex() # initializes a vortex object with the default AWS actions map from AWS Policy Generator
 print(vortex.get_aws_services()) # prints all available AWS services (i.e. ec2, s3, iam, etc.)
